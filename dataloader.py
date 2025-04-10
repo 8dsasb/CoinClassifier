@@ -60,9 +60,10 @@ def load_coin_dataset(csv_url, batch_size=32):
     df['encoded_class'] = label_encoder.fit_transform(df['label'])
 
     # Split into train (60%), val (10%), test (30%)
-    train_df, temp_df = train_test_split(df, test_size=0.4, random_state=42, stratify=df['encoded_class'])
+    print(df)
+    '''train_df, temp_df = train_test_split(df, test_size=0.4, random_state=42, stratify=df['encoded_class'])
     val_df, test_df = train_test_split(temp_df, test_size=0.75, random_state=42, stratify=temp_df['encoded_class'])
-    print(train_df)
+    print(train_df)'''
     # Build datasets
     train_dataset = CoinImageDataset(train_df)
     val_dataset = CoinImageDataset(val_df)
@@ -73,4 +74,4 @@ def load_coin_dataset(csv_url, batch_size=32):
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    return train_df, val_df, test_df, train_loader, val_loader, test_loader, label_encoder
+    return train_df, val_df, test_df, train_loader, val_loader, test_loader
