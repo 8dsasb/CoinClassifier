@@ -26,9 +26,6 @@ class CoinImageDataset(Dataset):
         print(img_path)
         label = row['encoded_class']
 
-        if not img_path.is_file():
-            raise FileNotFoundError(f"Image not found: {img_path}")
-
         image = Image.open(img_path).convert("RGB")
         image = T.ToTensor()(image)
 
