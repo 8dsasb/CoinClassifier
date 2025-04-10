@@ -61,7 +61,7 @@ def load_coin_dataset(csv_url, batch_size=32):
     # Split into train (60%), val (10%), test (30%)
     train_df, temp_df = train_test_split(df, test_size=0.4, random_state=42, stratify=df['encoded_class'])
     val_df, test_df = train_test_split(temp_df, test_size=0.75, random_state=42, stratify=temp_df['encoded_class'])
-
+    print(train_df)
     # Build datasets
     train_dataset = CoinImageDataset(train_df)
     val_dataset = CoinImageDataset(val_df)
