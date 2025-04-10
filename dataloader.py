@@ -27,10 +27,19 @@ class CoinImageDataset(Dataset):
     def __len__(self):
         return len(self.dataframe)
 
-    def __getitem__(self, idx):
+        def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
-        img_path = Path(row['URL']) / row['image name']  # Combine URL and image name
+
+        # Ensure image name is valid
+        if pd.isna(row['image name']):
+            raise ValueError(f"Missing image name for row: {row}")
+
+        # Combine URL and image name
+        img_path = Path(row['URL']) / row['image name']
         label = row['encoded_class']
+
+        if not img_path.is_file():
+            raise FileNotFoundError(f"Image not found or not a file: {img_path}")
 
         image = Image.open(img_path).convert("RGB")
         image = T.ToTensor()(image)
