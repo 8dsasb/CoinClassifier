@@ -50,24 +50,37 @@ def load_coin_dataset(csv_url, batch_size=32):
     return train_df, val_df, test_df, train_loader, val_loader, test_loader, label_encoder
 
 
+import os
+from pathlib import Path
+
 def show_images_from_df(df, n=10):
     subset = df.iloc[:n]
 
     plt.figure(figsize=(15, 5))
-    for idx, row in enumerate(subset.itertuples()):
-        img_path = getattr(row, 'URL')
-        label = getattr(row, 'label')
-        try:
-            img = Image.open(img_path).convert("RGB")
+    count = 0
 
-            plt.subplot(2, 5, idx + 1)
+    for row in subset.itertuples():
+        folder_path = getattr(row, 'URL')
+        label = getattr(row, 'label')
+
+        try:
+            # Try to find the first image inside the folder
+            image_files = list(Path(folder_path).glob("*.jpg"))  # You can add png, jpeg as needed
+
+            if not image_files:
+                print(f"No image found in {folder_path}")
+                continue
+
+            img = Image.open(image_files[0]).convert("RGB")
+
+            plt.subplot(2, 5, count + 1)
             plt.imshow(img)
             plt.title(label, fontsize=9)
             plt.axis('off')
+            count += 1
 
         except Exception as e:
-            print(f"Error opening {img_path}: {e}")
+            print(f"Error opening image from {folder_path}: {e}")
 
     plt.tight_layout()
     plt.show()
-
