@@ -16,18 +16,7 @@ class CoinImageDataset(Dataset):
     def __len__(self):
         return len(self.dataframe)
 
-    from pathlib import Path
-from PIL import Image
-import torchvision.transforms as T
-
-class CoinImageDataset(Dataset):
-    def __init__(self, dataframe):
-        self.dataframe = dataframe.reset_index(drop=True)
-
-    def __len__(self):
-        return len(self.dataframe)
-
-        def __getitem__(self, idx):
+    def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
 
         # Ensure image name is valid
@@ -46,36 +35,45 @@ class CoinImageDataset(Dataset):
 
         return image, label
 
+
 def load_coin_dataset(csv_url, batch_size=32):
     """
-    Loads the coin classification dataset from a CSV file.
+    Loads the coin dataset from a CSV file and prepares DataLoaders.
 
     Parameters:
-        csv_url (str): Path or URL to the CSV file.
-        batch_size (int): Batch size for DataLoaders.
+    - csv_url (str): URL or path to the CSV file
+    - batch_size (int): Batch size for DataLoaders
 
     Returns:
-        train_df, val_df, test_df : pd.DataFrame
-        train_loader, val_loader, test_loader : torch.utils.data.DataLoader
-        label_encoder : sklearn.preprocessing.LabelEncoder
+    - train_df, val_df, test_df (DataFrames)
+    - train_loader, val_loader, test_loader (DataLoaders)
+    - label_encoder (for inverse transform if needed)
     """
-    # Load CSV
+
     df = pd.read_csv(csv_url)
+    df.columns = df.columns.str.strip()  # Clean column names
+
+    # Drop rows with missing image names
+    df.dropna(subset=['image name'], inplace=True)
+
+    # Optional: remove rows with broken paths
+    df['full_path'] = df.apply(lambda r: Path(r['URL']) / r['image name'], axis=1)
+    df = df[df['full_path'].apply(lambda p: p.is_file())]
+    df.drop(columns=['full_path'], inplace=True)
 
     # Encode class labels
     label_encoder = LabelEncoder()
     df['encoded_class'] = label_encoder.fit_transform(df['label'])
 
-    # Split into train (60%), val (10%), test (30%)
+    # Split: 60% train, 10% val, 30% test
     train_df, temp_df = train_test_split(df, test_size=0.4, random_state=42, stratify=df['encoded_class'])
     val_df, test_df = train_test_split(temp_df, test_size=0.75, random_state=42, stratify=temp_df['encoded_class'])
 
-    # Create datasets
+    # Datasets and loaders
     train_dataset = CoinImageDataset(train_df)
     val_dataset = CoinImageDataset(val_df)
     test_dataset = CoinImageDataset(test_df)
 
-    # Create DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
