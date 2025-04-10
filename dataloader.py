@@ -16,31 +16,27 @@ class CoinImageDataset(Dataset):
     def __len__(self):
         return len(self.dataframe)
 
+    from pathlib import Path
+from PIL import Image
+import torchvision.transforms as T
+
+class CoinImageDataset(Dataset):
+    def __init__(self, dataframe):
+        self.dataframe = dataframe.reset_index(drop=True)
+
+    def __len__(self):
+        return len(self.dataframe)
+
     def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
-        folder_path = Path(row['URL'])  # This is a directory, not a file
+        img_path = Path(row['URL']) / row['image name']  # Combine URL and image name
         label = row['encoded_class']
-
-        if not folder_path.is_dir():
-            raise ValueError(f"Expected a directory but got: {folder_path}")
-
-        # Search for image files inside the directory
-        image_files = list(folder_path.glob("*.jpg")) + list(folder_path.glob("*.jpeg")) + list(folder_path.glob("*.png"))
-
-        if not image_files:
-            raise FileNotFoundError(f"No image files found in: {folder_path}")
-
-        # Use the first valid image file
-        img_path = image_files[0]
-
-        # Ensure img_path is a file (not a misnamed folder)
-        if img_path.is_dir():
-            raise ValueError(f"Found a directory instead of an image file: {img_path}")
 
         image = Image.open(img_path).convert("RGB")
         image = T.ToTensor()(image)
 
         return image, label
+
 def load_coin_dataset(csv_url, batch_size=32):
     """
     Loads the coin classification dataset from a CSV file.
