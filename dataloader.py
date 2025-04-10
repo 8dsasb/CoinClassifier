@@ -47,7 +47,7 @@ def load_coin_dataset(csv_url, batch_size=32):
         train_loader, val_loader, test_loader (PyTorch DataLoaders)
         label_encoder (LabelEncoder to inverse labels)
     """
-
+    print('Helo')
     df = pd.read_csv(csv_url)
     df.columns = df.columns.str.strip()  # Clean column names
 
