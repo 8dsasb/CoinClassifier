@@ -20,9 +20,10 @@ class CoinImageDataset(Dataset):
         row = self.dataframe.iloc[idx]
 
         # Build full image path from folder + image name
-        img_folder = Path(row['URL'])
+        img_folder = row['URL']
         img_name = str(row['image name']).strip()
         img_path = img_folder +'/'+ img_name
+        print(img_path)
         label = row['encoded_class']
 
         if not img_path.is_file():
