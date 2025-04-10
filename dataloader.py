@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image
 import torchvision.transforms as T
 import torch
+import numpy as np
 
 class CoinImageDataset(Dataset):
     def __init__(self, dataframe):
@@ -27,7 +28,8 @@ class CoinImageDataset(Dataset):
         label = row['encoded_class']
 
         image = Image.open(img_path).convert("RGB")
-        image = T.ToTensor()(image)
+        image = torch.tensor(np.array(image)).permute(2, 0, 1).float() / 255.0
+
 
         return image, label
 
