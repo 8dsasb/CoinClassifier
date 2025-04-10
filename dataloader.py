@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset, DataLoader
+from pathlib import Path
 from PIL import Image
 import torchvision.transforms as T
 import torch
@@ -17,30 +18,50 @@ class CoinImageDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
-        img_folder = row['URL']  # Folder containing the image
+        img_folder = Path(row['URL'])  # Folder containing image(s)
         label = row['encoded_class']
 
-        # Find a .jpg file in the folder (assumes 1 image per folder or consistent naming)
-        from pathlib import Path
-        img_path = next(Path(img_folder).glob("*.jpg"))  # Add png/jpeg as needed
+        # Find the first image inside the folder
+        image_files = list(img_folder.glob("*.jpg")) + list(img_folder.glob("*.jpeg")) + list(img_folder.glob("*.png"))
+        if not image_files:
+            raise FileNotFoundError(f"No image found in folder: {img_folder}")
 
+        img_path = image_files[0]
         image = Image.open(img_path).convert("RGB")
         image = T.ToTensor()(image)
+
         return image, label
 
 def load_coin_dataset(csv_url, batch_size=32):
+    """
+    Loads the coin classification dataset from a CSV file.
+
+    Parameters:
+        csv_url (str): Path or URL to the CSV file.
+        batch_size (int): Batch size for DataLoaders.
+
+    Returns:
+        train_df, val_df, test_df : pd.DataFrame
+        train_loader, val_loader, test_loader : torch.utils.data.DataLoader
+        label_encoder : sklearn.preprocessing.LabelEncoder
+    """
+    # Load CSV
     df = pd.read_csv(csv_url)
 
+    # Encode class labels
     label_encoder = LabelEncoder()
     df['encoded_class'] = label_encoder.fit_transform(df['label'])
 
+    # Split into train (60%), val (10%), test (30%)
     train_df, temp_df = train_test_split(df, test_size=0.4, random_state=42, stratify=df['encoded_class'])
     val_df, test_df = train_test_split(temp_df, test_size=0.75, random_state=42, stratify=temp_df['encoded_class'])
 
+    # Create datasets
     train_dataset = CoinImageDataset(train_df)
     val_dataset = CoinImageDataset(val_df)
     test_dataset = CoinImageDataset(test_df)
 
+    # Create DataLoaders
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
