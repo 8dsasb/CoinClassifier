@@ -54,11 +54,6 @@ def load_coin_dataset(csv_url, batch_size=32):
     # Drop any rows with missing or malformed data
     df.dropna(subset=['URL', 'image name', 'label'], inplace=True)
 
-    # Check file existence and remove broken paths
-    df['full_path'] = df.apply(lambda row: Path(row['URL']) / str(row['image name']).strip(), axis=1)
-    df = df[df['full_path'].apply(lambda p: p.is_file())]
-    df.drop(columns=['full_path'], inplace=True)
-
     # Encode the class labels
     label_encoder = LabelEncoder()
     df['encoded_class'] = label_encoder.fit_transform(df['label'])
