@@ -24,7 +24,6 @@ class CoinImageDataset(Dataset):
         img_folder = row['URL']
         img_name = str(row['image name']).strip()
         img_path = img_folder +'/'+ img_name
-        print(img_path)
         label = row['encoded_class']
 
         image = Image.open(img_path).convert("RGB")
