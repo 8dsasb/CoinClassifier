@@ -18,20 +18,29 @@ class CoinImageDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.dataframe.iloc[idx]
-        img_folder = Path(row['URL'])  # Folder containing image(s)
+        folder_path = Path(row['URL'])  # This is a directory, not a file
         label = row['encoded_class']
 
-        # Find the first image inside the folder
-        image_files = list(img_folder.glob("*.jpg")) + list(img_folder.glob("*.jpeg")) + list(img_folder.glob("*.png"))
-        if not image_files:
-            raise FileNotFoundError(f"No image found in folder: {img_folder}")
+        if not folder_path.is_dir():
+            raise ValueError(f"Expected a directory but got: {folder_path}")
 
+        # Search for image files inside the directory
+        image_files = list(folder_path.glob("*.jpg")) + list(folder_path.glob("*.jpeg")) + list(folder_path.glob("*.png"))
+
+        if not image_files:
+            raise FileNotFoundError(f"No image files found in: {folder_path}")
+
+        # Use the first valid image file
         img_path = image_files[0]
+
+        # Ensure img_path is a file (not a misnamed folder)
+        if img_path.is_dir():
+            raise ValueError(f"Found a directory instead of an image file: {img_path}")
+
         image = Image.open(img_path).convert("RGB")
         image = T.ToTensor()(image)
 
         return image, label
-
 def load_coin_dataset(csv_url, batch_size=32):
     """
     Loads the coin classification dataset from a CSV file.
